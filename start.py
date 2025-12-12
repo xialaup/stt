@@ -346,7 +346,7 @@ def api():
             print(e)
             return jsonify({"code": 1, "msg": str(e)})
         
-        res=_api_process(model_name=model_name,wav_file=wav_file,language=language,response_format=response_format)        
+        raw_subtitles=_api_process(model_name=model_name,wav_file=wav_file,language=language,response_format=response_format)        
         if response_format != 'json':
             raw_subtitles = "\n".join(raw_subtitles)
         return jsonify({"code": 0, "msg": 'ok', "data": raw_subtitles})
