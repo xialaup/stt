@@ -346,9 +346,9 @@ def api():
             print(e)
             return jsonify({"code": 1, "msg": str(e)})
         
-        raw_subtitles=_api_process(model_name=model_name,wav_file=wav_file,language=language,response_format=response_format)        
-        if response_format != 'json':
-            raw_subtitles = "\n".join(raw_subtitles)
+        raw_subtitles=_api_process(model_name=model_name,wav_file=wav_file,language=language,response_format=response_format)
+        # _api_process already returns the correct format (string for text/srt, list for json)
+        # No need to join again - it's already processed
         return jsonify({"code": 0, "msg": 'ok', "data": raw_subtitles})
     except Exception as e:
         print(e)
@@ -389,7 +389,7 @@ def _api_process(model_name,wav_file,language=None,response_format="text",prompt
         text = re.sub(r'&#\d+;', '', text)
 
         # 无有效字符
-        if not text or re.match(r'^[，。、？‘’“”；：（｛｝【】）:;"\'\s \d`!@#$%^&*()_+=.,?/\\-]*$', text) or len(text) <= 1:
+        if not text or re.match(r'^[，。、？''""；：（｛｝【】）:;"\'\s \d`!@#$%^&*()_+=.,?/\\-]*$', text) or len(text) <= 1:
             continue
         if response_format == 'json':
             # 原语言字幕
@@ -399,8 +399,12 @@ def _api_process(model_name,wav_file,language=None,response_format="text",prompt
             raw_subtitles.append(text)
         else:
             raw_subtitles.append(f'{len(raw_subtitles) + 1}\n{startTime} --> {endTime}\n{text}\n')
+    
+    # Handle empty results - ensure raw_subtitles is always defined
     if response_format != 'json':
-        raw_subtitles = "\n".join(raw_subtitles)
+        # Convert list to string, or return empty string if no valid segments
+        raw_subtitles = "\n".join(raw_subtitles) if raw_subtitles else ""
+    # For json format, return empty list if no valid segments
     return raw_subtitles
     
 @app.route('/checkupdate', methods=['GET', 'POST'])
